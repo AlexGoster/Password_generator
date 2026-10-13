@@ -67,6 +67,8 @@ class PasswordGenApp:
         try:
             length = self.length_var.get()
             count = self.count_var.get()
+            if not 4 <= length <= 64 or not 1 <= count <= 20:
+                raise ValueError("Длина: 4–64 символа; количество: 1–20 паролей.")
             self.result_text.delete("1.0", tk.END)
             for _ in range(count):
                 pwd = generate_password(
@@ -76,13 +78,17 @@ class PasswordGenApp:
                     use_uppercase=self.uppercase_var.get()
                 )
                 self.result_text.insert(tk.END, pwd + "\n")
-        except ValueError as e:
+        except (ValueError, tk.TclError) as e:
             messagebox.showerror("Ошибка", str(e))
 
     def copy_to_clipboard(self):
         text = self.result_text.get("1.0", tk.END).strip()
         if text:
-            pyperclip.copy(text)
+            try:
+                pyperclip.copy(text)
+            except pyperclip.PyperclipException as exc:
+                messagebox.showerror("Ошибка", f"Буфер обмена недоступен: {exc}")
+                return
             messagebox.showinfo("Скопировано", "Пароль скопирован в буфер обмена!")
         else:
             messagebox.showwarning("Внимание", "Нет пароля для копирования.")
